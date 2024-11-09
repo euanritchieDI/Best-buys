@@ -22,7 +22,7 @@ library(janitor)
 #wbnew$educ2[grepl("ducation",wbnew$sector3)] = 1
 
 ##... however some projects seem to have disappeared relative to last download...
-wb = read_excel("C:/git/Best-buys/World Bank/data/WB_projects_21_10_2024.xls",skip=2)
+wb = read_excel("GitHub/Best-buys/World Bank/data/WB_projects_21_10_2024.xls",skip=2)
 wb$educ = 1*(grepl("ducation",wb$sector1))
 wb$educ2 = 1*(grepl("ducation",wb$sector1))
 wb$educ2[grepl("ducation",wb$sector2)] = 1
@@ -31,6 +31,7 @@ wb$educ2[grepl("ducation",wb$sector3)] = 1
 educs = unique(c(wb$id[wb$educ==1]))
 educs2 = unique(c(wb$id[wb$educ2==1]))
 
+setnames(wb,"id","projectid")
 
 # educs from wb best buys code
 
@@ -56,7 +57,7 @@ toc()
 doclist = names(docjson$documents)
 doclist = unique(doclist[doclist!="facets"])
 
-sel = c("docty","docdt","display_title","projectid","txturl","pdfurl","repnb","prdln",
+sel = c("majdocty","docty","docdt","display_title","projectid","txturl","pdfurl","repnb","prdln",
 "projn","id")
 
 docs = list()
@@ -109,9 +110,9 @@ pads$mainsec = 1*(pads$projectid %in% educs)
 pads$anyBB = with(pads,1*(preprim>0 | stped>0 | tarl>0))
 pads$anyBB_nopreprim = with(pads,1*(stped>0 | tarl>0))
 
-pads = left_join(pads,wb[c("id","boardapprovaldate","curr_total_commitment","sector1")],by="id")
+pads = left_join(pads,wb[c("projectid","boardapprovaldate","curr_total_commitment","sector1")],by="projectid")
 
-write.csv(pads,"C:/git/Best-buys/World Bank/data/WorldBank_Education_projects.csv",row.names=F)
+write.csv(pads,"GitHub/Best-buys/World Bank/data/WorldBank_Education_projects.csv",row.names=F)
 as.data.frame(pads %>% group_by(docyear) %>% summarize(mean(stped)))
 
 with(pads,table(docyear,tarl))
