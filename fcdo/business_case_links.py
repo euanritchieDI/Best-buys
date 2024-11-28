@@ -74,7 +74,7 @@ collectdocs.loc[:,'IS'] = collectdocs['narrative'].str.contains(r"intervention ?
 
 # Select just the business case documents
 bc = collectdocs[collectdocs['BC']==1].copy()
-bc.loc[:,'year'] = bc['narrative'].str.extract(r'((?<=, )\d{4})')
+bc.loc[:,'year'] = bc['narrative'].str.extract(r'published[^\)]*(\d{4})')
 bc.loc[:,'ADD'] = bc['narrative'].str.contains(r'addendum', case=False).astype(int)
 
 # Just ex-DFID bits

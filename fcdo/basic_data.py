@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import requests
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
@@ -53,8 +54,8 @@ def getgender(Node):
 # GET PROJECT DATES
 def getdates(Node,num):
     dates=[node.attrib.get("iso-date") for node in Node.xpath("activity-date")]
-    types=[node.attrib.get("type") for node in Node.xpath("activity-date")]
-    return dates[types==num] if len(dates)>0 and num in types else "NA" # in IATI policy-marker code 1 is gender
+    types=np.array([node.attrib.get("type") for node in Node.xpath("activity-date")])
+    return dates[np.where(types==num)[0][0]] if len(dates)>0 and num in types else "NA" 
 
 # GET SUM OF BUDGETS (total commitment for project - needs to be summed by child level eventually)
 def budgetSum(Node):
@@ -72,7 +73,7 @@ def getsector_pct(Node):
     try:
         secs = ";".join(secs)
     except:
-        secs = "100" # this may look odd but only relevant cases are where sector has one value
+        secs = "1" # this may look odd but only relevant cases are where sector has one value
     return secs
     
     
@@ -108,6 +109,7 @@ for lnk in fcdolinks:
     
     collect[proj] = pd.DataFrame({
         'id':ids,
+	'iatipage':proj,
         'title':ttl,
         'description':dsc,
         'icf':icf,
@@ -129,4 +131,4 @@ result_grouped = result_grouped.rename(columns={'budget':'budget_sum'})
 result = result[result['id'].str.contains(r'\d{6}$')]
 result = pd.merge(result, result_grouped, on="parent", how="left")
 result = result.drop(columns=["budget"])
-result.to_csv("C:/git/Best-buys/fcdo/data/Basic_data.csv",index=False)
+result.to_csv("C:/Users/euan/Documents/GitHub/Best-buys/fcdo/data/Basic_data.csv",index=False)

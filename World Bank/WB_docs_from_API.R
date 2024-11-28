@@ -96,9 +96,69 @@ collapse_whitespace = function(string){
 padtext = remove_punct(collapse_whitespace(padtext))
 padtext = tolower(padtext)
 
-preprim = str_count(padtext,"pre[- ]?primary")
-tarl    = str_count(padtext,"teaching ?at ?the ?right ?level|\\btarl\\b")
-stped   = str_count(padtext,"structured ?pedagogy")
+#stped   = str_count(padtext,"structured ?pedagogy")
+
+SP = c("structured.?pedagogy",
+  "structured.?pedagogical.?interventions", 
+  #“lesson plans” & “learning materials/student books” & “coaching/instructional support” 
+  "structured.?lesson.?plans",
+  "pedagogical.?guidance",
+  "ongoing.?teacher.?support",
+  "standardized.?approach",
+  "packaged.?intervention",
+  "lesson.?sequencing")
+
+TARL = c(
+  "group(ed|ing)? by ((learning|ability) level|level of (learning|ability))",
+  "targeted ?instruction|instruction ?(that|which) ?is ?targeted",
+  "teaching ?at ?the ?right ?level|\\btarl\\b",
+  "level.?appropriate ?(tuition|instruction)",
+  "catch.?up.?class",
+  "interactive ?pedagogy",
+  "remedial ?education",
+  "differentiated ?instruction",
+  "personali.ed ?learning")
+
+INFO = c(
+  "information.?treatment", 
+  "information.?campaign",
+  "targeted.?information.?dissemination",
+  "school.?quality.?information", 
+  "information.?about.?earnings", 
+  "diagnostic.?feedback")
+
+TT = c(
+  "travel.?time.?reduction",
+  "school.?proximity",
+  "community.?schools",
+  "transport.?assistance",
+  "providing.?transportation",
+  "village.?run.?schools",
+  "safe school.?travel",
+  "reduce.?distance.?to.?school",
+  "remote.?areas.{0,60}(access.?to.?schooling|accessing.?school)|access.?to.?schooling.{0,60}remote.?areas")
+
+test = padtext[157]
+comfunk = function(x,reg){
+	ret = ifelse(max(str_count(x,reg))==0,"",reg[which.max(str_count(x,reg))])
+	return(ret)
+}
+
+comfunk(test,SP)
+
+pads$stped     = str_count(padtext,paste(SP,collapse="|"))
+pads$stped_var = sapply(padtext,function(x) sum(str_count(x,SP)>0))
+pads$stped_com = sapply(padtext,function(x) comfunk(x,SP))
+pads$tarl      = str_count(padtext,paste(TARL,collapse="|"))
+pads$tarl_var  = sapply(padtext,function(x) sum(str_count(x,TARL)>0))
+pads$tarl_com  = sapply(padtext,function(x) comfunk(x,TARL))
+pads$info      = str_count(padtext,paste(INFO,collapse="|"))
+pads$info_var  = sapply(padtext,function(x) sum(str_count(x,INFO)>0))
+pads$info_com  = sapply(padtext,function(x) comfunk(x,INFO))
+pads$travel      = str_count(padtext,paste(TT,collapse="|"))
+pads$travel_var  = sapply(padtext,function(x) sum(str_count(x,TT)>0))
+pads$travel_com  = sapply(padtext,function(x) comfunk(x,TT))
+
 
 pads$preprim = preprim
 pads$tarl    = tarl
@@ -110,9 +170,14 @@ pads$mainsec = 1*(pads$projectid %in% educs)
 pads$anyBB = with(pads,1*(preprim>0 | stped>0 | tarl>0))
 pads$anyBB_nopreprim = with(pads,1*(stped>0 | tarl>0))
 
+
+as.data.frame(pads %>% group_by(year) %>% summarize(mean(totalchar)))
+
+
+
 pads = left_join(pads,wb[c("projectid","boardapprovaldate","curr_total_commitment","sector1")],by="projectid")
 
-write.csv(pads,"GitHub/Best-buys/World Bank/data/WorldBank_Education_projects.csv",row.names=F)
+write.csv(pads,"GitHub/Best-buys/World Bank/data/WorldBank_Education_projects_extra_vars.csv",row.names=F)
 as.data.frame(pads %>% group_by(docyear) %>% summarize(mean(stped)))
 
 with(pads,table(docyear,tarl))
